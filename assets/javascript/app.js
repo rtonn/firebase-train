@@ -15,6 +15,23 @@ console.log("hello");
 
   //Create var to reference databse
   var database = firebase.database(); 
+  var currentTime = moment(); 
+
+  database.ref().on("child_added", function(childSnap){
+    var name = childSnap.val().name; 
+    var dest = childSnap.val().dest; 
+    var fTrain = childSnap.val().first; 
+    var freq = childSnap.val().frequency; 
+    var min = childSnap.val().min; 
+    var next = childSnap.val().next;
+    
+    
+
+    $("#trainTable > tbody").append(
+      "<tr><td>" + name + "</td><td>" + dest + "</td><td>" + freq + "</td><td>" + next + "</td><td>" + min + "</td><tr>"); 
+  }); 
+
+  
 
   //Add new train
   $("#submit").on("click", function(event){
@@ -29,20 +46,28 @@ console.log("hello");
         console.log(destination);
         console.log(firstTrain);
         console.log(frequency);
+      
+      var firstTrainConverted = moment(firstTrain, "hh:mm").subtract("1, years"); 
+      var difference = currentTime.diff(moment(firstTrainConverted), "minutes"); 
+      var remainder = difference % frequency; 
+      var minUntilTrain = frequency - remainder; 
+      var nextTrain = moment().add(minUntilTrain, "minutes").format("hh:mm a"); 
 
       var newTrain = {
           name: trainName, 
           dest: destination, 
           first: firstTrain, 
-          freq: frequency, 
-      }; 
-
-      database.ref().push(newTrain); 
+          frequency: frequency,
+          min: minUntilTrain, 
+          next: nextTrain,  
+      };      
 
             console.log(newTrain.name); 
             console.log(newTrain.dest); 
             console.log(newTrain.first); 
             console.log(newTrain.freq); 
+
+      database.ref().push(newTrain); 
    
             
   // clear text-boxes
@@ -57,39 +82,4 @@ console.log("hello");
 
   //.................................................
 
-  database.ref().on("value", function(snapshot) {
-         
-    console.log(childSnapshot.val().name);
-    console.log(childSnapshot.val().dest);
-    console.log(snapshot.val().first);
-    console.log(snapshot.val().freq);
-
-
-		var firebaseName = childSnapshot.val().name;
-		var firebaseLine = childSnapshot.val().line;
-		var firebaseDestination = childSnapshot.val().destination;
-		var firebaseTrainTimeInput = childSnapshot.val().trainTime;
-		var firebaseFrequency = childSnapshot.val().frequency;
-		
-		var diffTime = moment().diff(moment.unix(firebaseTrainTimeInput), "minutes");
-		var timeRemainder = moment().diff(moment.unix(firebaseTrainTimeInput), "minutes") % firebaseFrequency ;
-		var minutes = firebaseFrequency - timeRemainder;
-
-		var nextTrainArrival = moment().add(minutes, "m").format("hh:mm A"); 
-		
-		// Test for correct times and info
-		console.log(minutes);
-		console.log(nextTrainArrival);
-		console.log(moment().format("hh:mm A"));
-		console.log(nextTrainArrival);
-		console.log(moment().format("X"));
-
-		// Append train info to table on page
-		$("#trainTable > tbody").append("<tr><td>" + firebaseName + "</td><td>" + firebaseLine + "</td><td>"+ firebaseDestination + "</td><td>" + firebaseFrequency + " mins" + "</td><td>" + nextTrainArrival + "</td><td>" + minutes + "</td></tr>");
-
-});
-
-
-
-
-
+ 
